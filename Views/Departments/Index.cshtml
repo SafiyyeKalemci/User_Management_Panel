@@ -1,0 +1,94 @@
+@model IEnumerable<UserManagementSystem.Models.Department>
+
+@{
+    ViewData["Title"] = "Departman Yönetimi";
+    Layout = "_AdminLayout";
+}
+
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<div class="mb-4">
+    <h2>Departman Yönetimi</h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Departman Adı</th>
+                    <th>Yönetici</th>
+                    <th>Çalışan Sayısı</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var dept in Model)
+                {
+                    <tr>
+                        <td>@dept.Name</td>
+                        <td>@(dept.Manager != null ? $"{dept.Manager.Name} {dept.Manager.Surname}" : "-")</td>
+                        <td>@(dept.Users?.Count ?? 0)</td>
+                        <td>
+                            <button class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#editUserModal-@dept.Id"
+                                    title="Düzenle">
+                                <i class="bi bi-pencil text-secondary fs-6"></i>
+                            </button>
+
+                            <form asp-action="Delete" asp-controller="Users" method="post" class="d-inline"
+                                  onsubmit="return confirm('Bu kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?');">
+                                <input type="hidden" name="id" value="@dept.Id" />
+                                <button type="submit" class="btn btn-link p-1" title="Sil">
+                                    <i class="bi bi-trash text-danger fs-6"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- Düzenleme Modalleri -->
+@foreach (var dept in Model)
+{
+    <div class="modal fade" id="editDepartmentModal-@dept.Id" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Departmanı Düzenle</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form asp-action="Edit" asp-controller="Departments" method="post">
+                    <input type="hidden" name="Id" value="@dept.Id" />
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label>Departman Adı</label>
+                            <input class="form-control" name="Name" value="@dept.Name" />
+                        </div>
+                        <div class="mb-3">
+                            <label>Yönetici</label>
+                            <select class="form-select" name="ManagerId">
+                                <option value="">Yok</option>
+                                @foreach (var m in (IEnumerable<UserManagementSystem.Models.User>)ViewBag.Managers)
+                                {
+                                    <option value="@m.Id" selected="@(m.Id == dept.ManagerId)">@m.Name @m.Surname</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                        <button type="submit" class="btn btn-primary">Güncelle</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

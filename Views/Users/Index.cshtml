@@ -1,0 +1,472 @@
+@model IEnumerable<UserManagementSystem.Models.User>
+
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+    Layout = "_AdminLayout";
+    var allUsers = (List<UserManagementSystem.Models.User>)ViewBag.AllUsers;
+    int currentPage = (int)ViewBag.CurrentPage;
+    int totalPages = (int)ViewBag.TotalPages;
+}
+
+
+<!-- İstatistik Kartları -->
+<div class="row mb-4 justify-content-center g-2">
+    <div class="col-md-2">
+        <div class="card text-center shadow-sm border-0">
+            <div class="card-body p-2">
+                <h6 class="mb-1">Toplam Kullanıcı</h6>
+                <h4 class="mb-0">@allUsers.Count()</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center shadow-sm border-0">
+            <div class="card-body p-2">
+                <h6 class="mb-1">Aktif Kullanıcı</h6>
+                <h4 class="mb-0 text-success">@allUsers.Count(u => u.IsActive)</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center shadow-sm border-0">
+            <div class="card-body p-2">
+                <h6 class="mb-1">Pasif Kullanıcı</h6>
+                <h4 class="mb-0 text-danger">@allUsers.Count(u => !u.IsActive)</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<!-- Başlık -->
+<div class="mb-4">
+    <h2>Kullanıcı Yönetim Sistemi</h2>
+
+</div>
+
+<form method="get" asp-action="Index" asp-controller="Users" id="filterForm"
+      class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+
+    <div class="filter-pill flex-grow-1" style="max-width: 260px;">
+        <i class="bi bi-search"></i>
+        <input type="text" class="form-control form-control-sm" name="search" id="searchInput" value="@ViewBag.Search"
+               placeholder="Ara..." />
+    </div>
+
+    <div class="filter-pill">
+        <i class="bi bi-building"></i>
+        <select class="form-select form-select-sm" name="departmentId" onchange="this.form.submit()">
+            <option value="">Departman</option>
+            @foreach (var d in (IEnumerable<UserManagementSystem.Models.Department>)ViewBag.Departments)
+            {
+                <option value="@d.Id" selected="@(ViewBag.DepartmentId == d.Id)">@d.Name</option>
+            }
+        </select>
+    </div>
+
+    <div class="filter-pill">
+        <i class="bi bi-toggle-on"></i>
+        <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
+            <option value="">Durum</option>
+            <option value="active" selected="@(ViewBag.Status == "active")">Aktif</option>
+            <option value="passive" selected="@(ViewBag.Status == "passive")">Pasif</option>
+        </select>
+    </div>
+
+    <div class="filter-pill">
+        <i class="bi bi-sort-alpha-down"></i>
+        <select class="form-select form-select-sm" name="sort" onchange="this.form.submit()">
+            <option value="asc" selected="@(ViewBag.Sort != "desc")">A → Z</option>
+            <option value="desc" selected="@(ViewBag.Sort == "desc")">Z → A</option>
+        </select>
+    </div>
+
+    <button type="button" class="btn btn-brand btn-sm rounded-pill px-3 ms-auto" data-bs-toggle="modal"
+            data-bs-target="#createUserModal">
+        <i class="bi bi-plus-lg me-1"></i>Yeni Kullanıcı
+    </button>
+</form>
+
+<!-- Tablo -->
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover table-striped align-middle table-fixed">
+            <thead class="table-navy">
+                <tr>
+                    <th style="width:13%"> Ad</th>
+                    <th style="width:13%">Soyad</th>
+                    <th style="width:25%">E-Posta</th>
+                    <th style="width:16%">Departman</th>
+                    <th style="width:15%">Katılım Tarihi</th>
+                    <th style="width:8%">Durum</th>
+                    <th style="width:10%">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Name</td>
+                        <td>@user.Surname</td>
+                        <td>@user.Email</td>
+                        <td>@user.Department?.Name</td>
+                        <td>@user.CreatedAt.ToString("dd.MM.yyyy")</td>
+                        <td>
+                            @if (user.IsActive)
+                            {
+                                <span class="badge badge-active">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-passive">Pasif</span>
+                            }
+                        </td>
+                        <td>
+                            <button class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#viewUserModal-@user.Id"
+                                    title="Görüntüle">
+                                <i class="bi bi-eye text-secondary fs-6"></i>
+                            </button>
+
+                            <button class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#editUserModal-@user.Id"
+                                    title="Düzenle">
+                                <i class="bi bi-pencil text-secondary fs-6"></i>
+                            </button>
+
+                            <form asp-action="Delete" asp-controller="Users" method="post" class="d-inline"
+                                  onsubmit="return confirm('Bu kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?');">
+                                <input type="hidden" name="id" value="@user.Id" />
+                                <button type="submit" class="btn btn-link p-1" title="Sil">
+                                    <i class="bi bi-trash text-danger fs-6"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="editUserModal-@user.Id" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Kullanıcıyı Düzenle</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form asp-action="Edit" asp-controller="Users" method="post">
+                                    <input type="hidden" name="Id" value="@user.Id" />
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label>Ad</label>
+                                            <input class="form-control" name="Name" value="@user.Name" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label>Soyad</label>
+                                            <input class="form-control" name="Surname" value="@user.Surname" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label>E-Posta</label>
+                                            <input class="form-control" name="Email" value="@user.Email" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label>Departman</label>
+                                            <select class="form-select" name="DepartmentId"
+                                                    id="editDepartmentSelect-@user.Id">
+                                                <option value="">Seçiniz</option>
+                                                @foreach (var d
+                                            in
+                                            (IEnumerable<UserManagementSystem.Models.Department>)ViewBag.Departments)
+                                                {
+                                                    <option value="@d.Id" selected="@(d.Id == user.DepartmentId)">
+                                                        @d.Name</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label>Yönetici</label>
+                                                <select class="form-select" name="ManagerId" id="editManagerSelect-@user.Id">
+                                                    <option value="">Yok</option>
+                                                    @foreach (var m in allUsers.Where(x => x.IsManager && x.Id != user.Id))
+                                                    {
+                                                        <option value="@m.Id" selected="@(m.Id == user.ManagerId)">@m.Name
+                                                            @m.Surname</option>
+                                                        }
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="IsManager" value="true"
+                                                           checked="@user.IsManager" />
+                                                    <label class="form-check-label">Yönetici</label>
+                                                </div>
+
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" name="IsActive" value="true"
+                                                           checked="@user.IsActive" />
+                                                    <label class="form-check-label">Aktif Kullanıcı</label>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Kapat</button>
+                                                <button type="submit" class="btn btn-primary">Güncelle</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="modal fade" id="viewUserModal-@user.Id" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Kullanıcı Detayı</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p><strong>Ad:</strong> @user.Name</p>
+                                            <p><strong>Soyad:</strong> @user.Surname</p>
+                                            <p><strong>E-Posta:</strong> @user.Email</p>
+                                            <p><strong>Departman:</strong> @user.Department?.Name</p>
+                                            <p><strong>Katılım Tarihi:</strong> @user.CreatedAt.ToString("dd.MM.yyyy")</p>
+                                            <p><strong>Yönetici:</strong> @(user.Manager != null ? $"{user.Manager.Name}                                            {user.Manager.Surname}" : "-")</p>
+                                            <p>
+                                                <strong>Durum:</strong>
+                                                @if (user.IsActive)
+                                                {
+                                                    <span class="badge badge-active">Aktif</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-passive">Pasif</span>
+                                                }
+                                            </p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @{
+            int pageSize = (int)ViewBag.PageSize;
+            int totalCount = (int)ViewBag.TotalCount;
+
+            string? PageUrl(int p, int ps) => Url.Action("Index", "Users", new
+            {
+                search = ViewBag.Search,
+                departmentId = ViewBag.DepartmentId,
+                status = ViewBag.Status,
+                sort = ViewBag.Sort,
+                page = p,
+                pageSize = ps
+            });
+        }
+
+        <div class="pagination-custom">
+            <div class="rows-select">
+                <span>Sayfa başına:</span>
+                <select onchange="window.location.href = this.value">
+                    @foreach (var size in new[] { 5, 10, 25, 50 })
+                    {
+                        <option value="@PageUrl(1, size)" selected="@(size == pageSize)">@size</option>
+                    }
+                </select>
+                <span>&nbsp;/ toplam @totalCount kayıt</span>
+            </div>
+
+            @if (totalPages > 1)
+            {
+                <ul class="pagination-modern">
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        @if (currentPage == 1)
+                        {
+                            <span><i class="bi bi-chevron-double-left"></i></span>
+                        }
+                        else
+                        {
+                            <a href="@PageUrl(1, pageSize)"><i class="bi bi-chevron-double-left"></i></a>
+                        }
+                    </li>
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        @if (currentPage == 1)
+                        {
+                            <span><i class="bi bi-chevron-left"></i></span>
+                        }
+                        else
+                        {
+                            <a href="@PageUrl(currentPage - 1, pageSize)"><i class="bi bi-chevron-left"></i></a>
+                        }
+                    </li>
+
+                    @{
+                        int startPage = Math.Max(1, currentPage - 2);
+                        int endPage = Math.Min(totalPages, currentPage + 2);
+                    }
+
+                    @if (startPage > 1)
+                    {
+                        <li class="page-item"><a href="@PageUrl(1, pageSize)">1</a></li>
+                        if (startPage > 2)
+                        {
+                            <li class="page-item disabled"><span>…</span></li>
+                        }
+                    }
+
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        <li class="page-item @(i == currentPage ? "active" : "")">
+                            <a href="@PageUrl(i, pageSize)">@i</a>
+                        </li>
+                    }
+
+                    @if (endPage < totalPages)
+                    {
+                        if (endPage < totalPages - 1)
+                        {
+                            <li class="page-item disabled"><span>…</span></li>
+                        }
+                        <li class="page-item"><a href="@PageUrl(totalPages, pageSize)">@totalPages</a></li>
+                    }
+
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        @if (currentPage == totalPages)
+                        {
+                            <span><i class="bi bi-chevron-right"></i></span>
+                        }
+                        else
+                        {
+                            <a href="@PageUrl(currentPage + 1, pageSize)"><i class="bi bi-chevron-right"></i></a>
+                        }
+                    </li>
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        @if (currentPage == totalPages)
+                        {
+                            <span><i class="bi bi-chevron-double-right"></i></span>
+                        }
+                        else
+                        {
+                            <a href="@PageUrl(totalPages, pageSize)"><i class="bi bi-chevron-double-right"></i></a>
+                        }
+                    </li>
+                </ul>
+            }
+        </div>
+
+                        
+        <!-- Yeni Kullanıcı Modalı -->
+        <div class="modal fade" id="createUserModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Yeni Kullanıcı</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form asp-action="Create" asp-controller="Users" method="post">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label>Ad</label>
+                                <input class="form-control" name="Name" />
+                            </div>
+                            <div class="mb-3">
+                                <label>Soyad</label>
+                                <input class="form-control" name="Surname" />
+                            </div>
+                            <div class="mb-3">
+                                <label>E-Posta</label>
+                                <input class="form-control" name="Email" />
+                            </div>
+                            <div class="mb-3">
+                                <label>Departman</label>
+                                <select class="form-select" name="DepartmentId" id="createDepartmentSelect">
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var d in
+                                    (IEnumerable<UserManagementSystem.Models.Department>)ViewBag.Departments)
+                                    {
+                                        <option value="@d.Id">@d.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label>Yönetici</label>
+                                <select class="form-select" name="ManagerId" id="createManagerSelect">
+                                    <option value="">Yok</option>
+                                    @foreach (var m in allUsers.Where(x => x.IsManager))
+                                    {
+                                        <option value="@m.Id">@m.Name @m.Surname</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="IsManager" value="true" />
+                                <label class="form-check-label">Yönetici</label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="IsActive" value="true" checked />
+                                <label class="form-check-label">Aktif Kullanıcı</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                            <button type="submit" class="btn btn-primary">Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        @section Scripts {
+            <script>
+                const searchInput = document.getElementById('searchInput');
+                let debounceTimer;
+
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function () {
+                        document.getElementById('filterForm').submit();
+                    }, 600);
+                });
+
+                // Departman -> Yönetici Id eşleşmesi
+                const departmentManagerMap = {
+                        @foreach (var d in (IEnumerable<UserManagementSystem.Models.Department>)ViewBag.Departments)
+                    {
+                                @Html.Raw($"{d.Id}: {(d.ManagerId.HasValue ? d.ManagerId.ToString() : "null")},")
+                    }
+                    };
+
+                function setupAutoManager(departmentSelectId, managerSelectId) {
+                    const deptSelect = document.getElementById(departmentSelectId);
+                    const managerSelect = document.getElementById(managerSelectId);
+
+                    if (!deptSelect || !managerSelect) return;
+
+                    deptSelect.addEventListener('change', function () {
+                        const deptId = this.value;
+                        const managerId = departmentManagerMap[deptId];
+
+                        if (managerId) {
+                            managerSelect.value = managerId;
+                        }
+                    });
+                }
+
+                // Create modalindeki dropdown'lar için
+                setupAutoManager('createDepartmentSelect', 'createManagerSelect');
+
+                // Her Edit modali için
+                document.querySelectorAll('[id^="editDepartmentSelect-"]').forEach(function (deptSelect) {
+                    const userId = deptSelect.id.split('-')[1];
+                    setupAutoManager('editDepartmentSelect-' + userId, 'editManagerSelect-' + userId);
+                });
+            </script>
+        }

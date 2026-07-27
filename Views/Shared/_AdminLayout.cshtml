@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" />
+
+</head>
+
+<body>
+
+    <div class="admin-layout">
+
+        <!-- Sol Menü -->
+        <aside id="sidebar" class="sidebar-custom text-white p-3">
+
+            <div class="sidebar-header">
+                <h4 class="sidebar-title mb-0">Admin Panel</h4>
+                <button id="sidebarToggle" class="sidebar-toggle-btn" type="button" aria-label="Menüyü kapat">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+            </div>
+
+            <ul class="nav flex-column">
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link-custom" href="/Users">
+                        <i class="bi bi-people me-2"></i>
+                        Kullanıcılar
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link-custom" href="/Departments">
+                        <i class="bi bi-building me-2"></i>
+                        Departmanlar
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <a class="nav-link-custom" href="/Reports">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Raporlar
+                    </a>
+                </li>
+
+                <li class="nav-item mb-2">
+                    <span class="text-secondary">
+                        <i class="bi bi-gear me-2"></i>
+                        Ayarlar
+                    </span>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Sağ Taraf / Ana İçerik -->
+        <div id="mainContent" class="main-content">
+            @RenderBody()
+        </div>
+
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script>
+
+        const sidebar = document.getElementById("sidebar");
+        const mainContent = document.getElementById("mainContent");
+        const sidebarToggle = document.getElementById("sidebarToggle");
+
+        sidebarToggle.addEventListener("click", function () {
+
+        sidebar.classList.toggle("sidebar-collapsed");
+        mainContent.classList.toggle("main-content-expanded");
+
+        const icon = sidebarToggle.querySelector("i");
+
+        if (sidebar.classList.contains("sidebar-collapsed")) {
+
+        icon.classList.remove("bi-chevron-left");
+        icon.classList.add("bi-chevron-right");
+
+        sidebarToggle.setAttribute("aria-label", "Menüyü aç");
+
+        } else {
+
+        icon.classList.remove("bi-chevron-right");
+        icon.classList.add("bi-chevron-left");
+
+        sidebarToggle.setAttribute("aria-label", "Menüyü kapat");
+        }
+        });
+
+    </script>
+
+    @RenderSection("Scripts", required: false)
+    ```
+
+</body>
+
+</html>

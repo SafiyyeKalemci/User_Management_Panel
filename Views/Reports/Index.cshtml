@@ -1,0 +1,166 @@
+@{
+    ViewData["Title"] = "Raporlar";
+    Layout = "_AdminLayout";
+    var departments = (List<UserManagementSystem.Models.Department>)ViewBag.Departments;
+    var managerNames = (List<string>)ViewBag.ManagerNames;
+    var teamSizes = (List<int>)ViewBag.TeamSizes;
+}
+
+<div class="mb-4">
+    <h2>Raporlar</h2>
+</div>
+
+<!-- Özet Kartlar -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-arrow-up-circle text-success fs-3"></i>
+                <h6 class="mt-2 mb-1">En Kalabalık Departman</h6>
+                <h5 class="mb-0">@ViewBag.MostCrowded?.Name</h5>
+                <small class="text-muted">@ViewBag.MostCrowded?.Count kullanıcı</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-arrow-down-circle text-danger fs-3"></i>
+                <h6 class="mt-2 mb-1">En Az Kalabalık Departman</h6>
+                <h5 class="mb-0">@ViewBag.LeastCrowded?.Name</h5>
+                <small class="text-muted">@ViewBag.LeastCrowded?.Count kullanıcı</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-check-circle text-success fs-3"></i>
+                <h6 class="mt-2 mb-1">Aktif Kullanıcı</h6>
+                <h5 class="mb-0">@ViewBag.ActiveCount</h5>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle text-secondary fs-3"></i>
+                <h6 class="mt-2 mb-1">Pasif Kullanıcı</h6>
+                <h5 class="mb-0">@ViewBag.PassiveCount</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grafikler -->
+<div class="row g-3 mb-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h6 class="mb-3">Aktif / Pasif Kullanıcı Oranı</h6>
+                <canvas id="activePassiveChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h6 class="mb-3">Yöneticiye Göre Ekip Büyüklüğü</h6>
+                <canvas id="teamSizeChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Departman Bazlı Organizasyon Şeması -->
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <h6 class="mb-4">Departman Bazlı Organizasyon Şeması</h6>
+
+        @foreach (var dept in departments)
+        {
+            <div class="org-dept mb-4">
+                <div class="org-dept-title">
+                    <i class="bi bi-building me-1"></i>@dept.Name
+                </div>
+
+                <div class="org-chart">
+                    @if (dept.Manager != null)
+                    {
+                        <div class="org-node org-manager">
+                            <i class="bi bi-star-fill me-1"></i>
+                            @dept.Manager.Name @dept.Manager.Surname
+                        </div>
+                        <div class="org-line"></div>
+                    }
+
+                    <div class="org-employees">
+                        @{
+                            var employees = dept.Users?.Where(u => dept.Manager == null || u.Id !=
+                    dept.Manager.Id).ToList()
+                                ?? new List<UserManagementSystem.Models.User>();
+                        }
+                        @if (employees.Any())
+                        {
+                            @foreach (var emp in employees)
+                            {
+                                <div class="org-node org-employee">
+                                    @emp.Name @emp.Surname
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted small">Bu departmanda başka çalışan yok</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const activePassiveCtx = document.getElementById('activePassiveChart');
+        new Chart(activePassiveCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Aktif', 'Pasif'],
+                datasets: [{
+                    data: [@ViewBag.ActiveCount, @ViewBag.PassiveCount],
+                    backgroundColor: ['#0f5132', '#adb5bd'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        const teamSizeCtx = document.getElementById('teamSizeChart');
+        new Chart(teamSizeCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(managerNames)),
+                datasets: [{
+                    label: 'Ekip Büyüklüğü',
+                    data: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(teamSizes)),
+                    backgroundColor: '#004e9e',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+    </script>
+}
