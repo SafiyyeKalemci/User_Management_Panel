@@ -4,34 +4,49 @@
     ViewData["Title"] = "Kullanıcı Yönetimi";
     Layout = "_AdminLayout";
     var allUsers = (List<UserManagementSystem.Models.User>)ViewBag.AllUsers;
-    int currentPage = (int)ViewBag.CurrentPage;
-    int totalPages = (int)ViewBag.TotalPages;
 }
 
-
 <!-- İstatistik Kartları -->
-<div class="row mb-4 justify-content-center g-2">
-    <div class="col-md-2">
-        <div class="card text-center shadow-sm border-0">
-            <div class="card-body p-2">
+<div class="row mb-3 justify-content-center g-2">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="card text-center shadow-sm border-0 h-100">
+            <div class="card-body p-2 d-flex flex-column justify-content-center">
                 <h6 class="mb-1">Toplam Kullanıcı</h6>
                 <h4 class="mb-0">@allUsers.Count()</h4>
             </div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="card text-center shadow-sm border-0">
-            <div class="card-body p-2">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="card text-center shadow-sm border-0 h-100">
+            <div class="card-body p-2 d-flex flex-column justify-content-center">
                 <h6 class="mb-1">Aktif Kullanıcı</h6>
                 <h4 class="mb-0 text-success">@allUsers.Count(u => u.IsActive)</h4>
             </div>
         </div>
     </div>
-    <div class="col-md-2">
-        <div class="card text-center shadow-sm border-0">
-            <div class="card-body p-2">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="card text-center shadow-sm border-0 h-100">
+            <div class="card-body p-2 d-flex flex-column justify-content-center">
                 <h6 class="mb-1">Pasif Kullanıcı</h6>
                 <h4 class="mb-0 text-danger">@allUsers.Count(u => !u.IsActive)</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="card text-center shadow-sm border-0 h-100">
+            <div class="card-body p-2 d-flex flex-column justify-content-center">
+                <h6 class="mb-1">Son Eklenen</h6>
+                @if (ViewBag.LastAddedUser != null)
+                {
+                    <div class="fw-semibold" style="font-size: 0.95rem; color: var(--brand-blue-hover);">
+                        <i class="bi bi-person-plus-fill me-1"></i> @ViewBag.LastAddedUser.Name @ViewBag.LastAddedUser.Surname
+                    </div>
+                    <small class="text-muted" style="font-size: 0.75rem">@ViewBag.LastAddedUser.CreatedAt.ToString("dd.MM.yyyy")</small>
+                }
+                else
+                {
+                    <small class="text-muted">Henüz kullanıcı yok</small>
+                }
             </div>
         </div>
     </div>
@@ -43,74 +58,63 @@
 }
 
 <!-- Başlık -->
-<div class="mb-4">
+<div class="mb-4 d-flex">
     <h2>Kullanıcı Yönetim Sistemi</h2>
-
-</div>
-
-<form method="get" asp-action="Index" asp-controller="Users" id="filterForm"
-      class="d-flex flex-wrap gap-2 mb-4 align-items-center">
-
-    <div class="filter-pill flex-grow-1" style="max-width: 260px;">
-        <i class="bi bi-search"></i>
-        <input type="text" class="form-control form-control-sm" name="search" id="searchInput" value="@ViewBag.Search"
-               placeholder="Ara..." />
-    </div>
-
-    <div class="filter-pill">
-        <i class="bi bi-building"></i>
-        <select class="form-select form-select-sm" name="departmentId" onchange="this.form.submit()">
-            <option value="">Departman</option>
-            @foreach (var d in (IEnumerable<UserManagementSystem.Models.Department>)ViewBag.Departments)
-            {
-                <option value="@d.Id" selected="@(ViewBag.DepartmentId == d.Id)">@d.Name</option>
-            }
-        </select>
-    </div>
-
-    <div class="filter-pill">
-        <i class="bi bi-toggle-on"></i>
-        <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
-            <option value="">Durum</option>
-            <option value="active" selected="@(ViewBag.Status == "active")">Aktif</option>
-            <option value="passive" selected="@(ViewBag.Status == "passive")">Pasif</option>
-        </select>
-    </div>
-
-    <div class="filter-pill">
-        <i class="bi bi-sort-alpha-down"></i>
-        <select class="form-select form-select-sm" name="sort" onchange="this.form.submit()">
-            <option value="asc" selected="@(ViewBag.Sort != "desc")">A → Z</option>
-            <option value="desc" selected="@(ViewBag.Sort == "desc")">Z → A</option>
-        </select>
-    </div>
-
     <button type="button" class="btn btn-brand btn-sm rounded-pill px-3 ms-auto" data-bs-toggle="modal"
             data-bs-target="#createUserModal">
         <i class="bi bi-plus-lg me-1"></i>Yeni Kullanıcı
     </button>
-</form>
+</div>
+
+<div class="d-flex gap-2 mb-3">
+    <select id="departmentFilter" class="form-select form-select-sm" style="width:auto;">
+        <option value="">Tüm Departmanlar</option>
+        @foreach (var d in (IEnumerable<UserManagementSystem.Models.Department>)ViewBag.Departments)
+        {
+            <option value="@d.Name">@d.Name</option>
+        }
+    </select>
+ 
+    <select id="statusFilter" class="form-select form-select-sm" style="width:auto;">
+        <option value="">Tüm Durumlar</option>
+        <option value="Aktif">Aktif</option>
+        <option value="Pasif">Pasif</option>
+    </select>
+</div>
+
 
 <!-- Tablo -->
 <div class="card shadow-sm">
-    <div class="card-body">
-        <table class="table table-hover table-striped align-middle table-fixed">
-            <thead class="table-navy">
+    <div class="card-body p-2 p-md-2 overflow-auto">
+        <table class="table table-hover table-striped align-middle" id="usersTable" style="font-size: 0.85rem;">
+            <thead class="table-navy sticky-top">
                 <tr>
-                    <th style="width:13%"> Ad</th>
-                    <th style="width:13%">Soyad</th>
-                    <th style="width:25%">E-Posta</th>
-                    <th style="width:16%">Departman</th>
-                    <th style="width:15%">Katılım Tarihi</th>
-                    <th style="width:8%">Durum</th>
-                    <th style="width:10%">İşlemler</th>
+                    <th style="min-width: 60px;"> Ad</th>
+                    <th style="min-width: 60px;">Soyad</th>
+                    <th style="min-width: 120px;">E-Posta</th>
+                    <th style="min-width: 90px;">Departman</th>
+                    <th style="min-width: 85px;">Katılım Tarihi</th>
+                    <th style="min-width: 60px;">Durum</th>
+                    <th style="min-width: 70px;">İşlemler</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var user in Model)
                 {
                     <tr>
-                        <td>@user.Name</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                @if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+                                {
+                                    <img src="~/uploads/profiles/@user.ProfilePhotoPath" class="rounded-circle" width="36" height="36" style="object-fit:cover;" />
+                                }
+                                else
+                                {
+                                    <i class="bi bi-person-circle fs-4 text-secondary"></i>
+                                }
+                                <span>@user.Name</span>
+                            </div>
+                        </td>
                         <td>@user.Surname</td>
                         <td>@user.Email</td>
                         <td>@user.Department?.Name</td>
@@ -156,6 +160,14 @@
                                 <form asp-action="Edit" asp-controller="Users" method="post">
                                     <input type="hidden" name="Id" value="@user.Id" />
                                     <div class="modal-body">
+                                        @if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+                                        {
+                                            <img src="~/uploads/profiles/@user.ProfilePhotoPath" class="rounded-circle mb-2" width="60" height="60" style="object-fit:cover;" />
+                                        }
+                                        <div class="mb-3">
+                                            <label>Profil Fotoğrafı (değiştirmek için seç)</label>
+                                            <input type="file" class="form-control" name="ProfilePhoto" accept="image/*" />
+                                        </div>
                                         <div class="mb-3">
                                             <label>Ad</label>
                                             <input class="form-control" name="Name" value="@user.Name" />
@@ -254,113 +266,8 @@
                 </table>
             </div>
         </div>
+    </div>
 
-        @{
-            int pageSize = (int)ViewBag.PageSize;
-            int totalCount = (int)ViewBag.TotalCount;
-
-            string? PageUrl(int p, int ps) => Url.Action("Index", "Users", new
-            {
-                search = ViewBag.Search,
-                departmentId = ViewBag.DepartmentId,
-                status = ViewBag.Status,
-                sort = ViewBag.Sort,
-                page = p,
-                pageSize = ps
-            });
-        }
-
-        <div class="pagination-custom">
-            <div class="rows-select">
-                <span>Sayfa başına:</span>
-                <select onchange="window.location.href = this.value">
-                    @foreach (var size in new[] { 5, 10, 25, 50 })
-                    {
-                        <option value="@PageUrl(1, size)" selected="@(size == pageSize)">@size</option>
-                    }
-                </select>
-                <span>&nbsp;/ toplam @totalCount kayıt</span>
-            </div>
-
-            @if (totalPages > 1)
-            {
-                <ul class="pagination-modern">
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        @if (currentPage == 1)
-                        {
-                            <span><i class="bi bi-chevron-double-left"></i></span>
-                        }
-                        else
-                        {
-                            <a href="@PageUrl(1, pageSize)"><i class="bi bi-chevron-double-left"></i></a>
-                        }
-                    </li>
-                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                        @if (currentPage == 1)
-                        {
-                            <span><i class="bi bi-chevron-left"></i></span>
-                        }
-                        else
-                        {
-                            <a href="@PageUrl(currentPage - 1, pageSize)"><i class="bi bi-chevron-left"></i></a>
-                        }
-                    </li>
-
-                    @{
-                        int startPage = Math.Max(1, currentPage - 2);
-                        int endPage = Math.Min(totalPages, currentPage + 2);
-                    }
-
-                    @if (startPage > 1)
-                    {
-                        <li class="page-item"><a href="@PageUrl(1, pageSize)">1</a></li>
-                        if (startPage > 2)
-                        {
-                            <li class="page-item disabled"><span>…</span></li>
-                        }
-                    }
-
-                    @for (int i = startPage; i <= endPage; i++)
-                    {
-                        <li class="page-item @(i == currentPage ? "active" : "")">
-                            <a href="@PageUrl(i, pageSize)">@i</a>
-                        </li>
-                    }
-
-                    @if (endPage < totalPages)
-                    {
-                        if (endPage < totalPages - 1)
-                        {
-                            <li class="page-item disabled"><span>…</span></li>
-                        }
-                        <li class="page-item"><a href="@PageUrl(totalPages, pageSize)">@totalPages</a></li>
-                    }
-
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        @if (currentPage == totalPages)
-                        {
-                            <span><i class="bi bi-chevron-right"></i></span>
-                        }
-                        else
-                        {
-                            <a href="@PageUrl(currentPage + 1, pageSize)"><i class="bi bi-chevron-right"></i></a>
-                        }
-                    </li>
-                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                        @if (currentPage == totalPages)
-                        {
-                            <span><i class="bi bi-chevron-double-right"></i></span>
-                        }
-                        else
-                        {
-                            <a href="@PageUrl(totalPages, pageSize)"><i class="bi bi-chevron-double-right"></i></a>
-                        }
-                    </li>
-                </ul>
-            }
-        </div>
-
-                        
         <!-- Yeni Kullanıcı Modalı -->
         <div class="modal fade" id="createUserModal" tabindex="-1">
             <div class="modal-dialog">
@@ -371,6 +278,10 @@
                     </div>
                     <form asp-action="Create" asp-controller="Users" method="post">
                         <div class="modal-body">
+                            <div class="mb-3">
+                                <label>Profil Fotoğrafı</label>
+                                <input type="file" class="form-control" name="ProfilePhoto" accept="image/*" />
+                            </div>
                             <div class="mb-3">
                                 <label>Ad</label>
                                 <input class="form-control" name="Name" />
@@ -426,14 +337,18 @@
 
         @section Scripts {
             <script>
-                const searchInput = document.getElementById('searchInput');
-                let debounceTimer;
+                // Departman filtresi -> Departman kolonu (index 3: Ad,Soyad,Email,Departman,...)
+                $('#departmentFilter').on('change', function () {
+                    if ($.fn.DataTable.isDataTable('#usersTable')) {
+                        $('#usersTable').DataTable().column(3).search(this.value).draw();
+                    }
+                });
 
-                searchInput.addEventListener('input', function () {
-                    clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(function () {
-                        document.getElementById('filterForm').submit();
-                    }, 600);
+                // Durum filtresi -> Durum kolonu (index 5)
+                $('#statusFilter').on('change', function () {
+                    if ($.fn.DataTable.isDataTable('#usersTable')) {
+                        $('#usersTable').DataTable().column(5).search(this.value).draw();
+                    }
                 });
 
                 // Departman -> Yönetici Id eşleşmesi

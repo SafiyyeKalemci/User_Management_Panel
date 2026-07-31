@@ -14,70 +14,26 @@ namespace UserManagementSystem.Controllers
             _context = context;
         }
 
-        public IActionResult Index(string? search, int? departmentId, string? status, string? sort, int page = 1, int pageSize = 10)
+        public IActionResult Index()
         {
 
-            var query = _context.Users
+            var users = _context.Users
+                .Where(u => !u.IsDeleted)   
                 .Include(u => u.Manager)
                 .Include(u => u.Department)
-                .AsQueryable();
-
-            // Arama
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                query = query.Where(u =>
-                    u.Name.Contains(search) ||
-                    u.Surname.Contains(search) ||
-                    u.Email.Contains(search));
-            }
-
-            // Departman filtresi
-            if (departmentId.HasValue)
-            {
-                query = query.Where(u => u.DepartmentId == departmentId);
-            }
-
-            // Durum filtresi
-            if (status == "active")
-            {
-                query = query.Where(u => u.IsActive);
-            }
-            else if (status == "passive")
-            {
-                query = query.Where(u => !u.IsActive);
-            }
-
-            // Sıralama
-            query = sort == "desc"
-                ? query.OrderByDescending(u => u.Name)
-                : query.OrderBy(u => u.Name);
-
-            int totalCount = query.Count();
-            int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-
-            var users = query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+                .OrderBy(u => u.Name)
                 .ToList();
 
             // Dropdown ve istatistik kartları için TÜM kullanıcılar/departmanlar lazım (filtrelenmemiş)
-            ViewBag.AllUsers = _context.Users.ToList();
+            ViewBag.AllUsers = users;
             ViewBag.Departments = _context.Departments.ToList();
-
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = totalPages;
-            ViewBag.PageSize = pageSize;
-            ViewBag.TotalCount = totalCount;
-            ViewBag.Search = search;
-            ViewBag.DepartmentId = departmentId;
-            ViewBag.Status = status;
-            ViewBag.Sort = sort;
+            ViewBag.LastAddedUser = users.OrderByDescending(u => u.CreatedAt).FirstOrDefault();
 
             return View(users);
         }
 
         [HttpPost]
-        public IActionResult Create(User user)
+        public async Task<IActionResult> Create(User user, IFormFile? ProfilePhoto)
         {
             if (!ModelState.IsValid)
             {
@@ -85,13 +41,25 @@ namespace UserManagementSystem.Controllers
                 return RedirectToAction("Index");
             }
             user.CreatedAt = DateTime.Now;
+
+            if(ProfilePhoto != null && ProfilePhoto.Length > 0)
+            {
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
+                var savePath = Path.Combine("wwwroot/uploads/profiles", fileName);
+                using (var stream = new FileStream(savePath, FileMode.Create))
+                {
+                    await ProfilePhoto.CopyToAsync(stream);
+                }
+                user.ProfilePhotoPath = fileName;
+            }
+
             _context.Users.Add(user);
             _context.SaveChanges();
             return RedirectToAction("Index");
         }
 
         [HttpPost]
-        public IActionResult Edit(User user)
+        public async Task<IActionResult> Edit(User user, IFormFile? ProfilePhoto)
         {
             if (!ModelState.IsValid)
             {
@@ -108,6 +76,17 @@ namespace UserManagementSystem.Controllers
                 existing.ManagerId = user.ManagerId;
                 existing.IsActive = user.IsActive;
                 existing.IsManager = user.IsManager;
+
+                if(ProfilePhoto != null && ProfilePhoto.Length > 0)
+                {
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
+                    var savePath = Path.Combine("wwwroot/uploads/profiles", fileName);
+                    using (var stream = new FileStream(savePath, FileMode.Create))
+                    {
+                        await ProfilePhoto.CopyToAsync(stream);
+                    }
+                    existing.ProfilePhotoPath = fileName;
+                }
                 _context.SaveChanges();
             }
             return RedirectToAction("Index");
@@ -120,10 +99,32 @@ namespace UserManagementSystem.Controllers
             var user = _context.Users.Find(id);
             if (user != null)
             {
-                _context.Users.Remove(user);
+                user.IsDeleted = true; // Soft delete
                 _context.SaveChanges();
             }
             return RedirectToAction("Index");
+        }
+
+        public IActionResult Deleted()
+        {
+            var deletedUsers = _context.Users
+                .Where(u => u.IsDeleted)
+                .Include(u => u.Manager)
+                .Include(u => u.Department)
+                .ToList();
+            return View(deletedUsers);
+        }
+
+        [HttpPost]
+        public IActionResult Restore(int id)
+        {
+            var user = _context.Users.Find(id);
+            if (user != null)
+            {
+                user.IsDeleted = false;
+                _context.SaveChanges();
+            }
+            return RedirectToAction("Deleted");
         }
 
     }

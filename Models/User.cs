@@ -21,7 +21,8 @@ namespace UserManagementSystem.Models
         public int? ManagerId { get; set; }
         public User? Manager { get; set; }
         public bool IsManager { get; set; }
-
         public DateTime CreatedAt { get; set; }
+        public bool IsDeleted { get; set; }
+        public string? ProfilePhotoPath { get; set; }
     }
 }

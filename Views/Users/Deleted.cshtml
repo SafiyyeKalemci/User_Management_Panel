@@ -1,0 +1,53 @@
+@model IEnumerable<UserManagementSystem.Models.User>
+ 
+@{
+    ViewData["Title"] = "Silinen Kullanıcılar";
+    Layout = "_AdminLayout";
+}
+ 
+<div class="mb-4">
+    <h2>Silinen Kullanıcılar</h2>
+</div>
+ 
+<div class="card shadow-sm">
+    <div class="card-body">
+        <table class="table table-hover table-striped align-middle">
+            <thead class="table-navy">
+                <tr>
+                    <th>Ad</th>
+                    <th>Soyad</th>
+                    <th>E-Posta</th>
+                    <th>Departman</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Silinen kullanıcı yok</td>
+                    </tr>
+                }
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Name</td>
+                        <td>@user.Surname</td>
+                        <td>@user.Email</td>
+                        <td>@user.Department?.Name</td>
+                        <td>
+                            <form asp-action="Restore" asp-controller="Users" method="post" class="d-inline"
+                                  onsubmit="return confirm('Bu kullanıcıyı geri getirmek istediğinize emin misiniz?');">
+                                <input type="hidden" name="id" value="@user.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Geri Getir
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+ 

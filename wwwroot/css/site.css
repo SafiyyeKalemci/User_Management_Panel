@@ -59,16 +59,52 @@ body {
 .sidebar-custom.sidebar-collapsed {
   width: 60px;
 }
-/* Başlık ve menü linkleri kapanınca solup gitsin */
+
+/* Başlık ve menü linkleri kapanınca gizlensin */
 .sidebar-custom .sidebar-title,
 .sidebar-custom .nav {
-  transition: opacity 0.2s ease;
+  transition: all 0.3s ease;
   white-space: nowrap;
 }
-.sidebar-custom.sidebar-collapsed .sidebar-title,
+
+.sidebar-custom.sidebar-collapsed .sidebar-title {
+  display: none;
+}
+
 .sidebar-custom.sidebar-collapsed .nav {
-  opacity: 0;
-  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* Sidebar daraldığında navigasyon linkleri sadece ikon göstersin */
+.sidebar-custom.sidebar-collapsed .nav-link-custom,
+.sidebar-custom.sidebar-collapsed .text-secondary {
+  width: 44px;
+  height: 44px;
+  padding: 10px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 6px;
+  margin-left: 0;
+  margin-right: 0;
+  font-size: 0 !important;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-custom.sidebar-collapsed .nav-link-custom i,
+.sidebar-custom.sidebar-collapsed .text-secondary i {
+  margin: 0 !important;
+  font-size: 1.1rem !important;
+  display: block;
+}
+
+.sidebar-custom.sidebar-collapsed .nav-item.mb-2 {
+  margin-bottom: 4px !important;
 }
 
 .sidebar-header {
@@ -122,6 +158,12 @@ body {
 .sidebar-custom .nav-link-custom:hover {
   background-color: var(--brand-blue-hover);
   color: white;
+}
+
+/* İkon boyutu standardize et */
+.sidebar-custom .nav-link-custom i,
+.sidebar-custom .text-secondary i {
+  font-size: 1.1rem !important;
 }
 
 /* ---ANA İÇERİK---*/
@@ -199,6 +241,11 @@ body {
 .table-navy th {
   color: white;
   border-color: var(--brand-blue-hover);
+  padding: 8px 6px !important;
+}
+
+.table tbody td {
+  padding: 6px 8px !important;
 }
 
 .filter-pill {
@@ -376,8 +423,273 @@ body {
   color: #495057;
 }
 
-@media (max-width: 767.98px) {
+/* ---- RESPONSIVE TASARIM ---- */
+
+/* Mobil Ekranlar (xs - 576px altı) */
+@media (max-width: 575.98px) {
+  html {
+    font-size: 12px;
+  }
+
+  /* Mobil - Sidebar otomatik daralmış başlasın */
+  .sidebar-custom {
+    width: 60px;
+  }
+
+  .sidebar-custom .sidebar-title {
+    display: none;
+  }
+
+  .sidebar-custom .nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  /* Mobil - Nav linkleri sadece ikon */
+  .sidebar-custom .nav-link-custom,
+  .sidebar-custom .text-secondary {
+    width: 44px;
+    height: 44px;
+    padding: 10px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: 6px;
+    font-size: 0 !important;
+    overflow: hidden;
+  }
+
+  .sidebar-custom .nav-link-custom i,
+  .sidebar-custom .text-secondary i {
+    margin: 0 !important;
+    font-size: 1.1rem !important;
+  }
+
+  .sidebar-custom .nav-item.mb-2 {
+    margin-bottom: 4px !important;
+  }
+
   .main-content {
-    padding: 16px;
+    margin-left: 60px;
+    padding: 12px;
+  }
+
+  .main-content.main-content-expanded {
+    margin-left: 60px;
+  }
+
+  /* İstatistik Kartları - 1 sütun */
+  .row.mb-4 .col-md-2 {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .card-body {
+    min-height: 80px !important;
+    padding: 12px !important;
+  }
+
+  .card-body h6 {
+    font-size: 0.875rem;
+    margin-bottom: 4px !important;
+  }
+
+  .card-body h4 {
+    font-size: 1.5rem;
+  }
+
+  /* Filter Form - 1 sütun layout */
+  #filterForm {
+    flex-direction: column;
+  }
+
+  #filterForm .filter-pill {
+    width: 100%;
+  }
+
+  #filterForm .filter-pill.flex-grow-1 {
+    max-width: 100% !important;
+  }
+
+  #filterForm .btn {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  /* Tablo - Yatay scroll aktivasyonu */
+  .card:has(table) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    font-size: 0.75rem;
+    min-width: 600px;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 6px !important;
+    font-size: 0.7rem;
+  }
+
+  /* Modal'lar mobile optimized */
+  .modal-dialog {
+    margin: 1rem auto;
+    max-width: 95vw;
+  }
+
+  /* Pagination - Mobile optimized */
+  .pagination-custom {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pagination-custom .rows-select {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .pagination-modern {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .pagination-modern .page-item span,
+  .pagination-modern .page-item a {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.75rem;
+  }
+
+  /* Badge lar ve butonlar */
+  .badge {
+    font-size: 0.7rem;
+    padding: 4px 8px !important;
+  }
+
+  .btn-link {
+    padding: 4px 8px !important;
+  }
+
+  /* H2 başlık fontunu küçült */
+  h2 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Tablet Ekranlar (sm - 576px - 767px) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+  html {
+    font-size: 13px;
+  }
+
+  /* Tablet - Sidebar normal genişlikte */
+  .sidebar-custom {
+    width: 250px;
+  }
+
+  .main-content {
+    margin-left: 250px;
+  }
+
+  .main-content.main-content-expanded {
+    margin-left: 60px;
+  }
+
+  /* İstatistik Kartları - 2 sütun */
+  .row.mb-4 .col-md-2 {
+    width: 50%;
+    flex: 0 0 50%;
+    padding: 4px;
+  }
+
+  .card-body {
+    min-height: 90px !important;
+    padding: 12px !important;
+  }
+
+  .card-body h6 {
+    font-size: 0.875rem;
+  }
+
+  .card-body h4 {
+    font-size: 1.75rem;
+  }
+
+  /* Filter Form */
+  #filterForm {
+    gap: 6px;
+  }
+
+  #filterForm .filter-pill {
+    flex: 1 1 calc(33% - 4px);
+  }
+
+  #filterForm .filter-pill.flex-grow-1 {
+    max-width: none;
+  }
+
+  #filterForm .btn {
+    flex: 1 1 auto;
+  }
+
+  /* Tablo */
+  .table {
+    font-size: 0.8rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 6px !important;
+  }
+}
+
+/* Desktop Ekranlar (lg - 768px ve üzeri) */
+@media (min-width: 768px) {
+  .main-content {
+    padding: 24px;
+  }
+
+  /* Card body min height */
+  .card-body {
+    min-height: 120px;
+  }
+
+  /* Filter Form spacing */
+  #filterForm {
+    gap: 10px;
+  }
+
+  .filter-pill {
+    flex: 0 1 auto;
+  }
+}
+
+/* Çok geniş ekranlar (xl - 1200px üzeri) */
+@media (min-width: 1200px) {
+  html {
+    font-size: 16px;
+  }
+
+  .main-content {
+    padding: 32px;
+  }
+
+  .sidebar-custom {
+    width: 250px;
+  }
+
+  .main-content,
+  .main-content-expanded {
+    margin-left: 250px;
+  }
+
+  .card-body {
+    min-height: 140px;
   }
 }

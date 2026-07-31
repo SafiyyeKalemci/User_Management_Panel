@@ -18,12 +18,12 @@
 <div class="card shadow-sm">
     <div class="card-body">
         <table class="table table-hover table-striped align-middle">
-            <thead class="table-dark">
+            <thead class="table-navy">
                 <tr>
                     <th>Departman Adı</th>
                     <th>Yönetici</th>
-                    <th>Çalışan Sayısı</th>
-                    <th>İşlemler</th>
+                    <th class="text-center">Çalışan Sayısı</th>
+                    <th class="text-center">İşlemler</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,20 +32,12 @@
                     <tr>
                         <td>@dept.Name</td>
                         <td>@(dept.Manager != null ? $"{dept.Manager.Name} {dept.Manager.Surname}" : "-")</td>
-                        <td>@(dept.Users?.Count ?? 0)</td>
-                        <td>
-                            <button class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#editUserModal-@dept.Id"
+                        <td class="text-center">@(dept.Users?.Count ?? 0)</td>
+                        <td class="text-center">
+                            <button class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#editDepartmentModal-@dept.Id"
                                     title="Düzenle">
                                 <i class="bi bi-pencil text-secondary fs-6"></i>
                             </button>
-
-                            <form asp-action="Delete" asp-controller="Users" method="post" class="d-inline"
-                                  onsubmit="return confirm('Bu kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?');">
-                                <input type="hidden" name="id" value="@dept.Id" />
-                                <button type="submit" class="btn btn-link p-1" title="Sil">
-                                    <i class="bi bi-trash text-danger fs-6"></i>
-                                </button>
-                            </form>
                         </td>
                     </tr>
                 }

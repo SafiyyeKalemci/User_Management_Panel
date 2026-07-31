@@ -17,10 +17,11 @@ namespace UserManagementSystem.Controllers
         {
             var departments = _context.Departments
                 .Include(d => d.Manager)
-                .Include(d => d.Users)
+                .Include(d => d.Users.Where(u => !u.IsDeleted))
                 .ToList();
 
             var allUsers = _context.Users
+                .Where(u => !u.IsDeleted)
                 .Include(u => u.Manager)
                 .Include(u => u.Department)
                 .ToList();
