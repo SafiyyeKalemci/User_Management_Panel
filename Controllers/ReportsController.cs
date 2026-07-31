@@ -13,6 +13,13 @@ namespace UserManagementSystem.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Raporlar sayfası için gerekli tüm istatistikleri hesaplar:
+        /// aktif/pasif kullanıcı oranı, yöneticiye göre ekip büyüklüğü,
+        /// en kalabalık/en az kalabalık departman ve organizasyon şeması
+        /// için departman-yönetici-çalışan verisini hazırlar.
+        /// Silinmiş (IsDeleted) kullanıcılar tüm hesaplamalardan hariç tutulur.
+        /// </summary>
         public IActionResult Index()
         {
             var departments = _context.Departments

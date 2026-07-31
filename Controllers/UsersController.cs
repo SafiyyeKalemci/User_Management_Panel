@@ -14,9 +14,13 @@ namespace UserManagementSystem.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Silinmemiş tüm kullanıcıları, ilişkili yönetici ve departman bilgileriyle birlikte
+        /// isme göre sıralı şekilde çekip Kullanıcı Yönetimi sayfasını (Index view) döndürür.
+        /// Arama/filtreleme/sayfalama işlemleri istemci tarafında (DataTables) yapılır.
+        /// </summary>
         public IActionResult Index()
         {
-
             var users = _context.Users
                 .Where(u => !u.IsDeleted)   
                 .Include(u => u.Manager)
@@ -32,6 +36,12 @@ namespace UserManagementSystem.Controllers
             return View(users);
         }
 
+        /// <summary>
+        /// Formdan gönderilen bilgilerle yeni bir kullanıcı oluşturur.
+        /// Model doğrulaması başarısız olursa hata mesajıyla listeleme sayfasına yönlendirir.
+        /// Oluşturulma tarihini otomatik atar; varsa yüklenen profil fotoğrafını
+        /// sunucuya kaydedip dosya yolunu veritabanına yazar.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Create(User user, IFormFile? ProfilePhoto)
         {
@@ -42,10 +52,17 @@ namespace UserManagementSystem.Controllers
             }
             user.CreatedAt = DateTime.Now;
 
-            if(ProfilePhoto != null && ProfilePhoto.Length > 0)
+            if (ProfilePhoto != null && ProfilePhoto.Length > 0)
             {
                 var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
-                var savePath = Path.Combine("wwwroot/uploads/profiles", fileName);
+                var uploadsFolder = Path.Combine("wwwroot", "uploads", "profiles");
+
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                var savePath = Path.Combine(uploadsFolder, fileName);
                 using (var stream = new FileStream(savePath, FileMode.Create))
                 {
                     await ProfilePhoto.CopyToAsync(stream);
@@ -58,6 +75,12 @@ namespace UserManagementSystem.Controllers
             return RedirectToAction("Index");
         }
 
+        /// <summary>
+        /// Var olan bir kullanıcı kaydını, formdan gelen güncellenmiş bilgilerle günceller.
+        /// Sadece formda yer alan alanlar değiştirilir; CreatedAt ve IsDeleted gibi
+        /// formda bulunmayan alanlara dokunulmaz. Yeni bir fotoğraf seçilmediyse
+        /// mevcut profil fotoğrafı korunur.
+        /// </summary>
         [HttpPost]
         public async Task<IActionResult> Edit(User user, IFormFile? ProfilePhoto)
         {
@@ -77,10 +100,17 @@ namespace UserManagementSystem.Controllers
                 existing.IsActive = user.IsActive;
                 existing.IsManager = user.IsManager;
 
-                if(ProfilePhoto != null && ProfilePhoto.Length > 0)
+                if (ProfilePhoto != null && ProfilePhoto.Length > 0)
                 {
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
-                    var savePath = Path.Combine("wwwroot/uploads/profiles", fileName);
+                    var uploadsFolder = Path.Combine("wwwroot", "uploads", "profiles");
+
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
+                    }
+
+                    var savePath = Path.Combine(uploadsFolder, fileName);
                     using (var stream = new FileStream(savePath, FileMode.Create))
                     {
                         await ProfilePhoto.CopyToAsync(stream);
@@ -92,7 +122,11 @@ namespace UserManagementSystem.Controllers
             return RedirectToAction("Index");
         }
 
-
+        /// <summary>
+        /// Belirtilen kullanıcıyı veritabanından kalıcı olarak silmek yerine
+        /// "silinmiş" olarak işaretler (soft delete). Böylece veri kaybı yaşanmadan
+        /// kullanıcı normal listeden gizlenir ve gerektiğinde geri getirilebilir.
+        /// </summary>
         [HttpPost]
         public IActionResult Delete(int id)
         {
@@ -105,6 +139,10 @@ namespace UserManagementSystem.Controllers
             return RedirectToAction("Index");
         }
 
+        /// <summary>
+        /// Soft delete ile silinmiş (IsDeleted = true) kullanıcıları listeler.
+        /// Bu sayfa üzerinden silinen kullanıcılar geri getirilebilir.
+        /// </summary>
         public IActionResult Deleted()
         {
             var deletedUsers = _context.Users
@@ -115,6 +153,10 @@ namespace UserManagementSystem.Controllers
             return View(deletedUsers);
         }
 
+        /// <summary>
+        /// Daha önce soft delete ile silinmiş bir kullanıcının IsDeleted durumunu
+        /// false yaparak onu tekrar aktif kullanıcı listesine dahil eder.
+        /// </summary>
         [HttpPost]
         public IActionResult Restore(int id)
         {

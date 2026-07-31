@@ -66,21 +66,19 @@
     </button>
 </div>
 
-<div class="d-flex gap-2 mb-3">
-    <select id="departmentFilter" class="form-select form-select-sm" style="width:auto;">
-        <option value="">Tüm Departmanlar</option>
+    <select id="departmentFilter" class="form-select form-select-sm d-none" style="width:auto;">
+        <option value="">Departmanlar</option>
         @foreach (var d in (IEnumerable<UserManagementSystem.Models.Department>)ViewBag.Departments)
         {
             <option value="@d.Name">@d.Name</option>
         }
     </select>
  
-    <select id="statusFilter" class="form-select form-select-sm" style="width:auto;">
-        <option value="">Tüm Durumlar</option>
+    <select id="statusFilter" class="form-select form-select-sm d-none" style="width:auto;">
+        <option value="">Durum</option>
         <option value="Aktif">Aktif</option>
         <option value="Pasif">Pasif</option>
     </select>
-</div>
 
 
 <!-- Tablo -->
@@ -89,6 +87,7 @@
         <table class="table table-hover table-striped align-middle" id="usersTable" style="font-size: 0.85rem;">
             <thead class="table-navy sticky-top">
                 <tr>
+                    <th style="width: 30px;"></th>
                     <th style="min-width: 60px;"> Ad</th>
                     <th style="min-width: 60px;">Soyad</th>
                     <th style="min-width: 120px;">E-Posta</th>
@@ -99,13 +98,15 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var user in Model)
-                {
-                    <tr>
+            @foreach (var user in Model)
+            {
+                    
+                  <tr data-user-id="@user.Id">
+                        <td></td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
                                 @if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
-                                {
+                                 {
                                     <img src="~/uploads/profiles/@user.ProfilePhotoPath" class="rounded-circle" width="36" height="36" style="object-fit:cover;" />
                                 }
                                 else
@@ -134,19 +135,6 @@
                                     title="Görüntüle">
                                 <i class="bi bi-eye text-secondary fs-6"></i>
                             </button>
-
-                            <button class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#editUserModal-@user.Id"
-                                    title="Düzenle">
-                                <i class="bi bi-pencil text-secondary fs-6"></i>
-                            </button>
-
-                            <form asp-action="Delete" asp-controller="Users" method="post" class="d-inline"
-                                  onsubmit="return confirm('Bu kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?');">
-                                <input type="hidden" name="id" value="@user.Id" />
-                                <button type="submit" class="btn btn-link p-1" title="Sil">
-                                    <i class="bi bi-trash text-danger fs-6"></i>
-                                </button>
-                            </form>
                         </td>
                     </tr>
 
@@ -157,7 +145,7 @@
                                     <h5 class="modal-title">Kullanıcıyı Düzenle</h5>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
-                                <form asp-action="Edit" asp-controller="Users" method="post">
+                                <form asp-action="Edit" asp-controller="Users" method="post" enctype="multipart/form-data">
                                     <input type="hidden" name="Id" value="@user.Id" />
                                     <div class="modal-body">
                                         @if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
@@ -236,6 +224,16 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
                                         <div class="modal-body">
+                                             <div class="text-center mb-3">
+                                                @if (!string.IsNullOrEmpty(user.ProfilePhotoPath))
+                                                {
+                                                    <img src="~/uploads/profiles/@user.ProfilePhotoPath" class="rounded-circle" width="80" height="80" style="object-fit:cover;" />
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-person-circle" style="font-size: 80px; color: #adb5bd;"></i>
+                                                }
+                                            </div>
                                             <p><strong>Ad:</strong> @user.Name</p>
                                             <p><strong>Soyad:</strong> @user.Surname</p>
                                             <p><strong>E-Posta:</strong> @user.Email</p>
@@ -276,7 +274,7 @@
                         <h5 class="modal-title">Yeni Kullanıcı</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
-                    <form asp-action="Create" asp-controller="Users" method="post">
+                    <form asp-action="Create" asp-controller="Users" method="post" enctype="multipart/form-data">
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label>Profil Fotoğrafı</label>
@@ -337,19 +335,111 @@
 
         @section Scripts {
             <script>
-                // Departman filtresi -> Departman kolonu (index 3: Ad,Soyad,Email,Departman,...)
-                $('#departmentFilter').on('change', function () {
-                    if ($.fn.DataTable.isDataTable('#usersTable')) {
-                        $('#usersTable').DataTable().column(3).search(this.value).draw();
-                    }
+
+                // Tüm kütüphaneler yüklene kadar bekle
+                document.addEventListener('DOMContentLoaded', function() {
+                    // DataTable'ı sadece usersTable varsa başlat
+                    if (document.getElementById('usersTable')) {
+                        const table = $('#usersTable').DataTable({
+                            pageLength: 10,
+                            lengthMenu: [5, 10, 25, 50],
+                            dom: 'Bfrtip',
+                            select: {
+                                style: 'multi',      // birden fazla satır seçilebilsin
+                                selector: 'td:first-child'  // sadece ilk kolona (checkbox) tıklayınca seçilsin
+                            },
+                            columnDefs: [
+                                {
+                                    orderable: false,
+                                    className: 'select-checkbox',
+                                    targets: 0
+                                }
+                            ],
+
+                            buttons: [
+                                 {
+                                    text: '<i class="bi bi-pencil me-1"></i>Düzenle',
+                                    className: 'btn btn-sm btn-outline-primary',
+                                    action: function (e, dt, node, config) {
+                                        const selected = dt.rows({ selected: true });
+                                        if (selected.count() !== 1) {
+                                            alert('Düzenlemek için tek bir kullanıcı seçin.');
+                                            return;
+                                        }
+                                        const userId = $(selected.nodes()[0]).data('user-id');
+                                        const modal = new bootstrap.Modal(document.getElementById('editUserModal-' + userId));
+                                        modal.show();
+                                    }
+                                },
+                                {
+                                    text: '<i class="bi bi-trash me-1"></i>Sil',
+                                    className: 'btn btn-sm btn-outline-danger',
+                                    action: function (e, dt, node, config) {
+                                        const selected = dt.rows({ selected: true });
+                                        const ids = selected.nodes().toArray().map(row => $(row).data('user-id'));
+                                        if (ids.length === 0) {
+                                            alert('Silmek için en az bir kullanıcı seçin.');
+                                            return;
+                                        }
+                                        if (!confirm(ids.length + ' kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?')) return;
+
+                                        Promise.all(ids.map(id =>
+                                            fetch('/Users/Delete', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                                body: 'id=' + id
+                                            })
+                                        )).then(() => location.reload());
+                                    }
+                                },
+                                { extend: 'excelHtml5', text: 'Excel', className: 'btn btn-sm btn-success ms-3' },
+                                { extend: 'csvHtml5', text: 'CSV', className: 'btn btn-sm btn-info' },
+                                { extend: 'colvis', text: '<i class="bi bi-eye me-1"></i>Kolon Seç', className: 'btn btn-sm btn-outline-secondary' }
+                            ],
+                            language: {
+                                search: "Ara:",
+                                lengthMenu: "Sayfa başına _MENU_ kayıt",
+                                info: "_START_ - _END_ / toplam _TOTAL_ kayıt",
+                                paginate: { previous: "Önceki", next: "Sonraki" },
+                                zeroRecords: "Kayıt bulunamadı",
+                                select: {
+                                    rows: {
+                                        _: "%d satır seçildi",
+                                        0: "",
+                                        1: "1 satır seçildi"
+                                    }
+                                }
+                            }
+                        });
+
+                        const filterContainer = $('#usersTable_wrapper .dataTables_filter');
+                        filterContainer.css({
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            gap: '10px',
+                            flexWrap: 'nowrap'
+                        });
+
+                        $('#departmentFilter, #statusFilter').css({
+                            width: 'auto',
+                            flexShrink: '0'
+                        });
+
+                        filterContainer.prepend($('#statusFilter'), $('#departmentFilter'));
+                        $('#departmentFilter, #statusFilter').removeClass('d-none');
+
+                        $('#departmentFilter').on('change', function () {
+                            table.column(4).search(this.value).draw();
+                        });
+
+                        $('#statusFilter').on('change', function () {
+                            table.column(6).search(this.value).draw();
+                        });
+                      }
                 });
 
-                // Durum filtresi -> Durum kolonu (index 5)
-                $('#statusFilter').on('change', function () {
-                    if ($.fn.DataTable.isDataTable('#usersTable')) {
-                        $('#usersTable').DataTable().column(5).search(this.value).draw();
-                    }
-                });
+              
 
                 // Departman -> Yönetici Id eşleşmesi
                 const departmentManagerMap = {
@@ -383,5 +473,6 @@
                     const userId = deptSelect.id.split('-')[1];
                     setupAutoManager('editDepartmentSelect-' + userId, 'editManagerSelect-' + userId);
                 });
+
             </script>
         }

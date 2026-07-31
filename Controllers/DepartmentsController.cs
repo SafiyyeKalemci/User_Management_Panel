@@ -14,6 +14,11 @@ namespace UserManagementSystem.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Tüm departmanları, bağlı oldukları yönetici ve çalışan bilgileriyle
+        /// birlikte listeler. Departman düzenleme formunda kullanılacak yönetici
+        /// adaylarını (IsManager = true olan kullanıcılar) ayrıca hazırlar.
+        /// </summary>
         public IActionResult Index()
         {
             var departments = _context.Departments
@@ -26,6 +31,10 @@ namespace UserManagementSystem.Controllers
             return View(departments);
         }
 
+        /// <summary>
+        /// Var olan bir departmanın adını ve/veya atanmış yöneticisini günceller.
+        /// NOT: ModelState doğrulaması burada kontrol edilmiyor (eksik/tutarsızlık).
+        /// </summary>
         [HttpPost]
         public IActionResult Edit(Department department)
         {
@@ -39,6 +48,12 @@ namespace UserManagementSystem.Controllers
             return RedirectToAction("Index");
         }
 
+        /*
+        /// <summary>
+        /// Bir departmanı, yalnızca o departmana bağlı hiçbir kullanıcı yoksa
+        /// kalıcı olarak siler. Bağlı kullanıcı varsa silme işlemini engelleyip
+        /// kullanıcıyı hata mesajıyla uyarır (veri bütünlüğü koruması).
+        /// </summary>
         [HttpPost]
         public IActionResult Delete(int id)
         {
@@ -56,5 +71,6 @@ namespace UserManagementSystem.Controllers
             }
             return RedirectToAction("Index");
         }
+        */
     }
 }

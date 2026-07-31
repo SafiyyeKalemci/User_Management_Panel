@@ -248,6 +248,46 @@ body {
   padding: 6px 8px !important;
 }
 
+table.dataTable tbody tr.selected,
+table.dataTable tbody tr.selected > * {
+    background-color: rgba(0, 78, 158, 0.12) !important;
+    color: inherit !important;
+    box-shadow: none !important;
+}
+
+.dt-buttons .btn-outline-primary {
+    color: var(--brand-blue-hover) !important;
+    border-color: var(--brand-blue-hover) !important;
+    background-color: #fff !important;
+}
+
+.dt-buttons .btn-outline-primary:hover {
+    color: #fff !important;
+    background-color: var(--brand-blue-hover) !important;
+}
+
+.dt-buttons .btn-outline-danger {
+    color: #a30009 !important;
+    border-color: #a30009 !important;
+    background-color: #fff !important;
+}
+
+.dt-buttons .btn-outline-danger:hover {
+    color: #fff !important;
+    background-color: #a30009 !important;
+}
+
+.dt-buttons .btn-outline-secondary {
+    color: #495057 !important;
+    border-color: #ced4da !important;
+    background-color: #fff !important;
+}
+
+.dt-buttons .btn-outline-secondary:hover {
+    color: #fff !important;
+    background-color: #495057 !important;
+}
+
 .filter-pill {
   display: flex;
   flex-wrap: nowrap;
@@ -422,6 +462,8 @@ body {
   background-color: #e9ecef;
   color: #495057;
 }
+
+
 
 /* ---- RESPONSIVE TASARIM ---- */
 
@@ -693,3 +735,5 @@ body {
     min-height: 140px;
   }
 }
+
+
