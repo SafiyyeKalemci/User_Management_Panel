@@ -54,7 +54,38 @@
 
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+       <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'error',
+                title: 'Hata!',
+                text: '@Html.Raw(TempData["ErrorMessage"])',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'success',
+                title: 'Başarılı!',
+                text: '@Html.Raw(TempData["SuccessMessage"])',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
 }
 
 <!-- Başlık -->
@@ -345,8 +376,8 @@
                             lengthMenu: [5, 10, 25, 50],
                             dom: 'Bfrtip',
                             select: {
-                                style: 'multi',      // birden fazla satır seçilebilsin
-                                selector: 'td:first-child'  // sadece ilk kolona (checkbox) tıklayınca seçilsin
+                                style: 'multi',      
+                                selector: 'td:first-child' 
                             },
                             columnDefs: [
                                 {
@@ -363,7 +394,12 @@
                                     action: function (e, dt, node, config) {
                                         const selected = dt.rows({ selected: true });
                                         if (selected.count() !== 1) {
-                                            alert('Düzenlemek için tek bir kullanıcı seçin.');
+                                            Swal.fire({
+                                                icon: 'warning',
+                                                title: 'Uyarı',
+                                                text: 'Düzenlemek için tek bir kullanıcı seçin.',
+                                                confirmButtonColor: '#004e9e'
+                                            });
                                             return;
                                         }
                                         const userId = $(selected.nodes()[0]).data('user-id');
@@ -378,18 +414,43 @@
                                         const selected = dt.rows({ selected: true });
                                         const ids = selected.nodes().toArray().map(row => $(row).data('user-id'));
                                         if (ids.length === 0) {
-                                            alert('Silmek için en az bir kullanıcı seçin.');
+                                            Swal.fire({
+                                                icon: 'warning',
+                                                title: 'Uyarı',
+                                                text: 'Silmek için en az bir kullanıcı seçin.',
+                                                confirmButtonColor: '#004e9e'
+                                            });
                                             return;
                                         }
-                                        if (!confirm(ids.length + ' kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?')) return;
+                                        Swal.fire({
+                                            icon: 'warning',
+                                            title: 'Emin misiniz?',
+                                            text: ids.length + ' kullanıcı kalıcı olarak silinecek. Bu işlem geri alınamaz!',
+                                            showCancelButton: true,
+                                            confirmButtonText: 'Evet, sil',
+                                            cancelButtonText: 'Vazgeç',
+                                            confirmButtonColor: '#e3000f',
+                                            cancelButtonColor: '#004e9e'
+                                        }).then((result) => {
+                                            if (!result.isConfirmed) return;
 
-                                        Promise.all(ids.map(id =>
-                                            fetch('/Users/Delete', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                                body: 'id=' + id
-                                            })
-                                        )).then(() => location.reload());
+                                            Promise.all(ids.map(id =>
+                                                fetch('/Users/Delete', {
+                                                    method: 'POST',
+                                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                                    body: 'id=' + id
+                                                })
+                                            )).then(() => {
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Silindi!',
+                                                    toast: true,
+                                                    position: 'top-end',
+                                                    showConfirmButton: false,
+                                                    timer: 2000
+                                                }).then(() => location.reload());
+                                            });
+                                        });
                                     }
                                 },
                                 { extend: 'excelHtml5', text: 'Excel', className: 'btn btn-sm btn-success ms-3' },
@@ -472,6 +533,29 @@
                 document.querySelectorAll('[id^="editDepartmentSelect-"]').forEach(function (deptSelect) {
                     const userId = deptSelect.id.split('-')[1];
                     setupAutoManager('editDepartmentSelect-' + userId, 'editManagerSelect-' + userId);
+                });
+
+                // Edit formları için onay
+                document.addEventListener('submit', function (e) {
+                    const form = e.target;
+                    if (form.closest('[id^="editUserModal-"]')) {
+                        e.preventDefault();
+
+                        Swal.fire({
+                            icon: 'question',
+                            title: 'Emin misiniz?',
+                            text: 'Kullanıcı bilgileri güncellenecek.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Evet, güncelle',
+                            cancelButtonText: 'Vazgeç',
+                            confirmButtonColor: '#004e9e',
+                            cancelButtonColor: '#e3000f'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                form.submit();
+                            }
+                        });
+                    }
                 });
 
             </script>

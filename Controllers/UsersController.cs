@@ -73,6 +73,7 @@ namespace UserManagementSystem.Controllers
 
             _context.Users.Add(user);
             _context.SaveChanges();
+            TempData["SuccessMessage"] = $"{user.Name} {user.Surname} başarıyla eklendi.";
             return RedirectToAction("Index");
         }
 
@@ -119,6 +120,7 @@ namespace UserManagementSystem.Controllers
                     existing.ProfilePhotoPath = fileName;
                 }
                 _context.SaveChanges();
+                TempData["SuccessMessage"] = "Kullanıcı bilgileri başarıyla güncellendi.";
             }
             return RedirectToAction("Index");
         }
@@ -166,6 +168,7 @@ namespace UserManagementSystem.Controllers
             {
                 user.IsDeleted = false;
                 _context.SaveChanges();
+                TempData["SuccessMessage"] = $"{user.Name} {user.Surname} geri getirildi.";
             }
             return RedirectToAction("Deleted");
         }

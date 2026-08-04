@@ -5,6 +5,24 @@
     Layout = "_AdminLayout";
 }
  
+@if (TempData["SuccessMessage"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                icon: 'success',
+                title: 'Başarılı!',
+                text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SuccessMessage"])),
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true
+            });
+        });
+    </script>
+}
+
 <div class="mb-4">
     <h2>Silinen Kullanıcılar</h2>
 </div>
@@ -36,8 +54,7 @@
                         <td>@user.Email</td>
                         <td>@user.Department?.Name</td>
                         <td>
-                            <form asp-action="Restore" asp-controller="Users" method="post" class="d-inline"
-                                  onsubmit="return confirm('Bu kullanıcıyı geri getirmek istediğinize emin misiniz?');">
+                            <form asp-action="Restore" asp-controller="Users" method="post" class="d-inline restore-form">
                                 <input type="hidden" name="id" value="@user.Id" />
                                 <button type="submit" class="btn btn-sm btn-outline-success">
                                     <i class="bi bi-arrow-counterclockwise me-1"></i>Geri Getir
@@ -50,4 +67,30 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('submit', function (e) {
+            const form = e.target;
+            if (form.classList.contains('restore-form')) {
+                e.preventDefault();
+
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Emin misiniz?',
+                    text: 'Bu kullanıcı geri getirilecek.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Evet, geri getir',
+                    cancelButtonText: 'Vazgeç',
+                    confirmButtonColor: '#004e9e',
+                    cancelButtonColor: '#e3000f'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            }
+        });
+    </script>
+}
  

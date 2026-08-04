@@ -33,11 +33,16 @@ namespace UserManagementSystem.Controllers
 
         /// <summary>
         /// Var olan bir departmanın adını ve/veya atanmış yöneticisini günceller.
-        /// NOT: ModelState doğrulaması burada kontrol edilmiyor (eksik/tutarsızlık).
         /// </summary>
         [HttpPost]
         public IActionResult Edit(Department department)
         {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Departman adı boş bırakılamaz.";
+                return RedirectToAction("Index");
+            }
+
             var existing = _context.Departments.Find(department.Id);
             if (existing != null)
             {
