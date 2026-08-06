@@ -51,6 +51,14 @@ namespace UserManagementSystem.Controllers
                 TempData["ErrorMessage"] = string.Join(" ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 return RedirectToAction("Index");
             }
+
+            bool emailExists = _context.Users.Any(u => u.Email == user.Email && !u.IsDeleted);
+            if (emailExists)
+            {
+                TempData["ErrorMessage"] = "Bu e-posta adresi zaten kayıtlı.";
+                return RedirectToAction("Index");
+            }
+
             user.CreatedAt = DateTime.Now;
 
             if (ProfilePhoto != null && ProfilePhoto.Length > 0)
@@ -91,6 +99,14 @@ namespace UserManagementSystem.Controllers
                 TempData["ErrorMessage"] = string.Join(" ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
                 return RedirectToAction("Index");
             }
+
+            bool emailExists = _context.Users.Any(u => u.Email == user.Email && u.Id != user.Id && !u.IsDeleted);
+            if (emailExists)
+            {
+                TempData["ErrorMessage"] = "Bu e-posta adresi başka bir kullanıcı tarafından kullanılıyor.";
+                return RedirectToAction("Index");
+            }
+
             var existing = _context.Users.Find(user.Id);
             if (existing != null)
             {
@@ -104,6 +120,22 @@ namespace UserManagementSystem.Controllers
 
                 if (ProfilePhoto != null && ProfilePhoto.Length > 0)
                 {
+                    if (!IsValidProfilePhoto(ProfilePhoto, out var error))
+                    {
+                        TempData["ErrorMessage"] = error;
+                        return RedirectToAction("Index");
+                    }
+
+                    // Eski fotoğrafı sil
+                    if (!string.IsNullOrEmpty(existing.ProfilePhotoPath))
+                    {
+                        var oldFilePath = Path.Combine("wwwroot", "uploads", "profiles", existing.ProfilePhotoPath);
+                        if (System.IO.File.Exists(oldFilePath))
+                        {
+                            System.IO.File.Delete(oldFilePath);
+                        }
+                    }
+
                     var fileName = Guid.NewGuid().ToString() + Path.GetExtension(ProfilePhoto.FileName);
                     var uploadsFolder = Path.Combine("wwwroot", "uploads", "profiles");
 
@@ -171,6 +203,29 @@ namespace UserManagementSystem.Controllers
                 TempData["SuccessMessage"] = $"{user.Name} {user.Surname} geri getirildi.";
             }
             return RedirectToAction("Deleted");
+        }
+
+        private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+        private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
+
+        private bool IsValidProfilePhoto(IFormFile file, out string? errorMessage)
+        {
+            errorMessage = null;
+
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(extension))
+            {
+                errorMessage = "Sadece jpg, jpeg, png, gif veya webp formatında fotoğraf yükleyebilirsiniz.";
+                return false;
+            }
+
+            if (file.Length > MaxFileSizeBytes)
+            {
+                errorMessage = "Fotoğraf boyutu 5 MB'ı geçemez.";
+                return false;
+            }
+
+            return true;
         }
 
     }
