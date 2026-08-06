@@ -10,19 +10,23 @@ namespace UserManagementSystem.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.RenameColumn(
                 name: "ProfilePicturePath",
                 table: "Users",
                 newName: "ProfilePhotoPath");
+            */
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            /*
             migrationBuilder.RenameColumn(
                 name: "ProfilePhotoPath",
                 table: "Users",
                 newName: "ProfilePicturePath");
+            */
         }
     }
 }
