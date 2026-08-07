@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserManagementSystem.Data;
@@ -5,6 +6,7 @@ using UserManagementSystem.Models;
 
 namespace UserManagementSystem.Controllers
 {
+    [Authorize]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -28,21 +30,20 @@ namespace UserManagementSystem.Controllers
                 .OrderBy(u => u.Name)
                 .ToList();
 
-            // Dropdown ve istatistik kartları için TÜM kullanıcılar/departmanlar lazım (filtrelenmemiş)
             ViewBag.AllUsers = users;
             ViewBag.Departments = _context.Departments.ToList();
             ViewBag.LastAddedUser = users.OrderByDescending(u => u.CreatedAt).FirstOrDefault();
 
             return View(users);
         }
-        
-       
+
         /// <summary>
         /// Formdan gönderilen bilgilerle yeni bir kullanıcı oluşturur.
         /// Model doğrulaması başarısız olursa hata mesajıyla listeleme sayfasına yönlendirir.
         /// Oluşturulma tarihini otomatik atar; varsa yüklenen profil fotoğrafını
         /// sunucuya kaydedip dosya yolunu veritabanına yazar.
         /// </summary>
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public async Task<IActionResult> Create(User user, IFormFile? ProfilePhoto)
         {
@@ -91,6 +92,7 @@ namespace UserManagementSystem.Controllers
         /// formda bulunmayan alanlara dokunulmaz. Yeni bir fotoğraf seçilmediyse
         /// mevcut profil fotoğrafı korunur.
         /// </summary>
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public async Task<IActionResult> Edit(User user, IFormFile? ProfilePhoto)
         {
@@ -110,6 +112,13 @@ namespace UserManagementSystem.Controllers
             var existing = _context.Users.Find(user.Id);
             if (existing != null)
             {
+                bool isManagerRoleOnly = User.IsInRole("Manager") && !User.IsInRole("Admin");
+                if (isManagerRoleOnly && existing.IsManager)
+                {
+                    TempData["ErrorMessage"] = "Yöneticiler, başka bir yöneticinin bilgilerini düzenleyemez.";
+                    return RedirectToAction("Index");
+                }
+
                 existing.Name = user.Name;
                 existing.Surname = user.Surname;
                 existing.Email = user.Email;
@@ -162,16 +171,21 @@ namespace UserManagementSystem.Controllers
         /// "silinmiş" olarak işaretler (soft delete). Böylece veri kaybı yaşanmadan
         /// kullanıcı normal listeden gizlenir ve gerektiğinde geri getirilebilir.
         /// </summary>
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult Delete(int id)
         {
             var user = _context.Users.Find(id);
-            if (user != null)
-            {
-                user.IsDeleted = true; // Soft delete
-                _context.SaveChanges();
-            }
-            return RedirectToAction("Index");
+            if (user == null)
+                return NotFound(new { message = "Kullanıcı bulunamadı." });
+
+            bool isManagerRoleOnly = User.IsInRole("Manager") && !User.IsInRole("Admin");
+            if (isManagerRoleOnly && user.IsManager)
+                return BadRequest(new { message = "Yöneticiler, başka bir yöneticiyi silemez." });
+
+            user.IsDeleted = true;
+            _context.SaveChanges();
+            return Ok(new { message = $"{user.Name} {user.Surname} silindi." });
         }
 
         /// <summary>
@@ -192,12 +206,20 @@ namespace UserManagementSystem.Controllers
         /// Daha önce soft delete ile silinmiş bir kullanıcının IsDeleted durumunu
         /// false yaparak onu tekrar aktif kullanıcı listesine dahil eder.
         /// </summary>
+        [Authorize(Roles = "Admin,Manager")]
         [HttpPost]
         public IActionResult Restore(int id)
         {
             var user = _context.Users.Find(id);
             if (user != null)
             {
+                bool isManagerRoleOnly = User.IsInRole("Manager") && !User.IsInRole("Admin");
+                if (isManagerRoleOnly && user.IsManager)
+                {
+                    TempData["ErrorMessage"] = "Yöneticiler, başka bir yöneticiyi geri getiremez.";
+                    return RedirectToAction("Deleted");
+                }
+
                 user.IsDeleted = false;
                 _context.SaveChanges();
                 TempData["SuccessMessage"] = $"{user.Name} {user.Surname} geri getirildi.";

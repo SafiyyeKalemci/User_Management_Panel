@@ -91,10 +91,13 @@
 <!-- Başlık -->
 <div class="mb-4 d-flex">
     <h2>Kullanıcı Yönetim Sistemi</h2>
-    <button type="button" class="btn btn-brand btn-sm rounded-pill px-3 ms-auto" data-bs-toggle="modal"
-            data-bs-target="#createUserModal">
-        <i class="bi bi-plus-lg me-1"></i>Yeni Kullanıcı
-    </button>
+    @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
+    {
+        <button type="button" class="btn btn-brand btn-sm rounded-pill px-3 ms-auto" data-bs-toggle="modal"
+                data-bs-target="#createUserModal">
+            <i class="bi bi-plus-lg me-1"></i>Yeni Kullanıcı
+        </button>
+    }
 </div>
 
     <select id="departmentFilter" class="form-select form-select-sm d-none" style="width:auto;">
@@ -132,7 +135,7 @@
             @foreach (var user in Model)
             {
                     
-                  <tr data-user-id="@user.Id">
+                  <tr data-user-id="@user.Id" data-is-manager="@(user.IsManager ? "true" : "false")">
                         <td></td>
                         <td>
                             <div class="d-flex align-items-center gap-2">
@@ -388,74 +391,89 @@
                             ],
 
                             buttons: [
-                                 {
-                                    text: '<i class="bi bi-pencil me-1"></i>Düzenle',
-                                    className: 'btn btn-sm btn-outline-primary',
-                                    action: function (e, dt, node, config) {
-                                        const selected = dt.rows({ selected: true });
-                                        if (selected.count() !== 1) {
-                                            Swal.fire({
-                                                icon: 'warning',
-                                                title: 'Uyarı',
-                                                text: 'Düzenlemek için tek bir kullanıcı seçin.',
-                                                confirmButtonColor: '#004e9e'
-                                            });
-                                            return;
-                                        }
-                                        const userId = $(selected.nodes()[0]).data('user-id');
-                                        const modal = new bootstrap.Modal(document.getElementById('editUserModal-' + userId));
-                                        modal.show();
-                                    }
-                                },
+                                @if (User.IsInRole("Admin") || User.IsInRole("Manager"))
                                 {
-                                    text: '<i class="bi bi-trash me-1"></i>Sil',
-                                    className: 'btn btn-sm btn-outline-danger',
-                                    action: function (e, dt, node, config) {
-                                        const selected = dt.rows({ selected: true });
-                                        const ids = selected.nodes().toArray().map(row => $(row).data('user-id'));
-                                        if (ids.length === 0) {
+                                     <text>
+                                     {
+                                        text: '<i class="bi bi-pencil me-1"></i>Düzenle',
+                                        className: 'btn btn-sm btn-outline-primary',
+                                        action: function (e, dt, node, config) {
+                                            const selected = dt.rows({ selected: true });
+                                            if (selected.count() !== 1) {
+                                                Swal.fire({
+                                                    icon: 'warning',
+                                                    title: 'Uyarı',
+                                                    text: 'Düzenlemek için tek bir kullanıcı seçin.',
+                                                    confirmButtonColor: '#004e9e'
+                                                });
+                                                return;
+                                            }
+                                            const userId = $(selected.nodes()[0]).data('user-id');
+                                            const modal = new bootstrap.Modal(document.getElementById('editUserModal-' + userId));
+                                            modal.show();
+                                        }
+                                    },
+                                    {
+                                        text: '<i class="bi bi-trash me-1"></i>Sil',
+                                        className: 'btn btn-sm btn-outline-danger',
+                                        action: function (e, dt, node, config) {
+                                            const selected = dt.rows({ selected: true });
+                                            const ids = selected.nodes().toArray().map(row => $(row).data('user-id'));
+                                            if (ids.length === 0) {
+                                                Swal.fire({
+                                                    icon: 'warning',
+                                                    title: 'Uyarı',
+                                                    text: 'Silmek için en az bir kullanıcı seçin.',
+                                                    confirmButtonColor: '#004e9e'
+                                                });
+                                                return;
+                                            }
                                             Swal.fire({
                                                 icon: 'warning',
-                                                title: 'Uyarı',
-                                                text: 'Silmek için en az bir kullanıcı seçin.',
-                                                confirmButtonColor: '#004e9e'
-                                            });
-                                            return;
-                                        }
-                                        Swal.fire({
-                                            icon: 'warning',
-                                            title: 'Emin misiniz?',
-                                            text: ids.length + ' kullanıcı kalıcı olarak silinecek. Bu işlem geri alınamaz!',
-                                            showCancelButton: true,
-                                            confirmButtonText: 'Evet, sil',
-                                            cancelButtonText: 'Vazgeç',
-                                            confirmButtonColor: '#e3000f',
-                                            cancelButtonColor: '#004e9e'
-                                        }).then((result) => {
-                                            if (!result.isConfirmed) return;
+                                                title: 'Emin misiniz?',
+                                                text: ids.length + ' kullanıcı kalıcı olarak silinecek. Bu işlem geri alınamaz!',
+                                                showCancelButton: true,
+                                                confirmButtonText: 'Evet, sil',
+                                                cancelButtonText: 'Vazgeç',
+                                                confirmButtonColor: '#e3000f',
+                                                cancelButtonColor: '#004e9e'
+                                            }).then((result) => {
+                                                if (!result.isConfirmed) return;
 
-                                            Promise.all(ids.map(id =>
-                                                fetch('/Users/Delete', {
-                                                    method: 'POST',
-                                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                                    body: 'id=' + id
-                                                })
-                                            )).then(() => {
-                                                Swal.fire({
-                                                    icon: 'success',
-                                                    title: 'Silindi!',
-                                                    toast: true,
-                                                    position: 'top-end',
-                                                    showConfirmButton: false,
-                                                    timer: 2000
-                                                }).then(() => location.reload());
+                                                Promise.all(ids.map(id =>
+                                                    fetch('/Users/Delete', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                                        body: 'id=' + id
+                                                    }).then(res => res.json().then(data => ({ ok: res.ok, data })))
+                                                )).then(results => {
+                                                    const failed = results.filter(r => !r.ok);
+                                                    if (failed.length > 0) {
+                                                        Swal.fire({
+                                                            icon: 'error',
+                                                            title: 'Bazı kullanıcılar silinemedi',
+                                                            text: failed.map(f => f.data.message).join(' '),
+                                                            confirmButtonColor: '#004e9e'
+                                                        }).then(() => location.reload());
+                                                    } else {
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Silindi!',
+                                                            toast: true,
+                                                            position: 'top-end',
+                                                            showConfirmButton: false,
+                                                            timer: 2000
+                                                        }).then(() => location.reload());
+                                                    }
+                                                });
                                             });
-                                        });
-                                    }
-                                },
-                                { extend: 'excelHtml5', text: 'Excel', className: 'btn btn-sm btn-success ms-3' },
-                                { extend: 'csvHtml5', text: 'CSV', className: 'btn btn-sm btn-info' },
-                                { extend: 'colvis', text: '<i class="bi bi-eye me-1"></i>Kolon Seç', className: 'btn btn-sm btn-outline-secondary' }
+                                        }
+                                    },
+                                    </text>
+                                 }
+                                 { extend: 'excelHtml5', text: 'Excel', className: 'btn btn-sm btn-success ms-3' },
+                                 { extend: 'csvHtml5', text: 'CSV', className: 'btn btn-sm btn-info' },
+                                 { extend: 'colvis', text: '<i class="bi bi-eye me-1"></i>Kolon Seç', className: 'btn btn-sm btn-outline-secondary' }
                             ],
                             language: {
                                 search: "Ara:",

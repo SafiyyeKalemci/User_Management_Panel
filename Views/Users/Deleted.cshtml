@@ -66,12 +66,19 @@
                         <td>@user.Email</td>
                         <td>@user.Department?.Name</td>
                         <td>
-                            <form asp-action="Restore" asp-controller="Users" method="post" class="d-inline restore-form">
-                                <input type="hidden" name="id" value="@user.Id" />
-                                <button type="submit" class="btn btn-sm btn-outline-success">
-                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Geri Getir
-                                </button>
-                            </form>
+                            @if (User.IsInRole("Admin") || (User.IsInRole("Manager") && !user.IsManager))
+                            {
+                                <form asp-action="Restore" asp-controller="Users" method="post" class="d-inline restore-form">
+                                    <input type="hidden" name="id" value="@user.Id" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Geri Getir
+                                    </button>
+                                </form>
+                            }
+                            else if (User.IsInRole("Manager") && user.IsManager)
+                            {
+                                <span class="text-muted small">Yetkiniz yok</span>
+                            }
                         </td>
                     </tr>
                 }

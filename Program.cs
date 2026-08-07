@@ -23,7 +23,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
-    options.AccessDeniedPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
 });
 
 // Swagger servisleri
@@ -89,7 +89,7 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
-    // İlk admin hesabı yoksa oluştur
+    // Test amaçlı Admin hesabı
     var adminEmail = "admin@fuchs.com";
     var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
     if (existingAdmin == null)
@@ -105,6 +105,32 @@ using (var scope = app.Services.CreateScope())
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+    }
+
+    // Test amaçlı Manager hesabı
+    var managerEmail = "manager@fuchs.com";
+    var existingManager = await userManager.FindByEmailAsync(managerEmail);
+    if (existingManager == null)
+    {
+        var managerUser = new IdentityUser { UserName = managerEmail, Email = managerEmail, EmailConfirmed = true };
+        var result = await userManager.CreateAsync(managerUser, "Manager123!");
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(managerUser, "Manager");
+        }
+    }
+
+    // Test amaçlı User (salt okunur) hesabı
+    var normalEmail = "user@fuchs.com";
+    var existingNormal = await userManager.FindByEmailAsync(normalEmail);
+    if (existingNormal == null)
+    {
+        var normalUser = new IdentityUser { UserName = normalEmail, Email = normalEmail, EmailConfirmed = true };
+        var result = await userManager.CreateAsync(normalUser, "User123!");
+        if (result.Succeeded)
+        {
+            await userManager.AddToRoleAsync(normalUser, "User");
         }
     }
 }
