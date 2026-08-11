@@ -166,6 +166,36 @@ body {
   font-size: 1.1rem !important;
 }
 
+/* Sidebar daraldığında kullanıcı bilgisi ve çıkış butonu da sadece ikon göstersin */
+.sidebar-custom.sidebar-collapsed .sidebar-user-info {
+    font-size: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0 !important;
+}
+
+.sidebar-custom.sidebar-collapsed .sidebar-user-info i {
+    font-size: 1.1rem !important;
+    margin: 0 !important;
+ }
+
+.sidebar-custom.sidebar-collapsed .sidebar-logout-btn {
+    width: 44px;
+    height: 44px;
+    padding: 10px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 0 !important;
+    border-radius: 6px;
+}
+.sidebar-custom.sidebar-collapsed .sidebar-logout-btn i {
+    font-size: 1.1rem !important;
+    margin: 0 !important;
+}
+
 /* ---ANA İÇERİK---*/
 .main-content {
   min-width: 0;
