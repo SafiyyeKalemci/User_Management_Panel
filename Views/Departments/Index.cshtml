@@ -47,10 +47,17 @@
                         <td>@(dept.Manager != null ? $"{dept.Manager.Name} {dept.Manager.Surname}" : "-")</td>
                         <td class="text-center">@(dept.Users?.Count ?? 0)</td>
                         <td class="text-center">
+                            @if (User.IsInRole("Admin"))
+                            {
                             <button class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#editDepartmentModal-@dept.Id"
                                     title="Düzenle">
                                 <i class="bi bi-pencil text-secondary fs-6"></i>
                             </button>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">—</span>
+                            }
                         </td>
                     </tr>
                 }
@@ -61,39 +68,42 @@
 
 
 <!-- Düzenleme Modalleri -->
-@foreach (var dept in Model)
+@if (User.IsInRole("Admin"))
 {
-    <div class="modal fade" id="editDepartmentModal-@dept.Id" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Departmanı Düzenle</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    @foreach (var dept in Model)
+    {
+        <div class="modal fade" id="editDepartmentModal-@dept.Id" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Departmanı Düzenle</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form asp-action="Edit" asp-controller="Departments" method="post">
+                        <input type="hidden" name="Id" value="@dept.Id" />
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label>Departman Adı</label>
+                                <input class="form-control" name="Name" value="@dept.Name" />
+                            </div>
+                            <div class="mb-3">
+                                <label>Yönetici</label>
+                                <select class="form-select" name="ManagerId">
+                                    <option value="">Yok</option>
+                                    @foreach (var m in (IEnumerable<UserManagementSystem.Models.User>)ViewBag.Managers)
+                                    {
+                                        <option value="@m.Id" selected="@(m.Id == dept.ManagerId)">@m.Name @m.Surname</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+                            <button type="submit" class="btn btn-primary">Güncelle</button>
+                        </div>
+                    </form>
                 </div>
-                <form asp-action="Edit" asp-controller="Departments" method="post">
-                    <input type="hidden" name="Id" value="@dept.Id" />
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label>Departman Adı</label>
-                            <input class="form-control" name="Name" value="@dept.Name" />
-                        </div>
-                        <div class="mb-3">
-                            <label>Yönetici</label>
-                            <select class="form-select" name="ManagerId">
-                                <option value="">Yok</option>
-                                @foreach (var m in (IEnumerable<UserManagementSystem.Models.User>)ViewBag.Managers)
-                                {
-                                    <option value="@m.Id" selected="@(m.Id == dept.ManagerId)">@m.Name @m.Surname</option>
-                                }
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
-                        <button type="submit" class="btn btn-primary">Güncelle</button>
-                    </div>
-                </form>
             </div>
         </div>
-    </div>
+    }
 }

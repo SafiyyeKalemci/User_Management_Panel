@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using UserManagementSystem.Data;
 using UserManagementSystem.Models;
 
 namespace UserManagementSystem.Controllers
 {
+    [Authorize]
     public class DepartmentsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -34,6 +36,7 @@ namespace UserManagementSystem.Controllers
         /// <summary>
         /// Var olan bir departmanın adını ve/veya atanmış yöneticisini günceller.
         /// </summary>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public IActionResult Edit(Department department)
         {

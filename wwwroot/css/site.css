@@ -320,6 +320,10 @@ table.dataTable tbody tr.selected > * {
         background-color: #495057 !important;
     }
 
+div.dt-button-collection {
+    z-index: 2000 !important;
+}
+
 .filter-pill {
     display: flex;
     flex-wrap: nowrap;

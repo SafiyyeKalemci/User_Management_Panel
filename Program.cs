@@ -90,7 +90,7 @@ using (var scope = app.Services.CreateScope())
         }
     }
     // Test amaçlı Admin hesabı
-    var adminEmail = "admin@fuchs.com";
+    var adminEmail = "admin@company.com";
     var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
     if (existingAdmin == null)
     {
@@ -109,7 +109,7 @@ using (var scope = app.Services.CreateScope())
     }
 
     // Test amaçlı Manager hesabı
-    var managerEmail = "manager@fuchs.com";
+    var managerEmail = "manager@company.com";
     var existingManager = await userManager.FindByEmailAsync(managerEmail);
     if (existingManager == null)
     {
@@ -122,7 +122,7 @@ using (var scope = app.Services.CreateScope())
     }
 
     // Test amaçlı User (salt okunur) hesabı
-    var normalEmail = "user@fuchs.com";
+    var normalEmail = "user@company.com";
     var existingNormal = await userManager.FindByEmailAsync(normalEmail);
     if (existingNormal == null)
     {
